@@ -170,8 +170,8 @@ SNA/
 ### 1. 克隆仓库
 
 ```bash
-git clone https://github.com/XL1126/SNA.git
-cd SNA
+git clone https://github.com/XL1126/Simulated-neuron-architecture.git
+cd Simulated-neuron-architecture
 ```
 
 ### 2. 安装 Python 依赖
