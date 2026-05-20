@@ -1,0 +1,38 @@
+# Build artifacts
+build/
+dist/
+*.egg-info/
+__pycache__/
+*.pyc
+*.pyo
+
+# C++ compiled binaries
+*.pyd
+*.so
+*.dll
+*.exe
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Experiment outputs (large)
+experiment_results/
+
+# Python virtualenv
+venv/
+.venv/
+env/
+
+# pytest
+.pytest_cache/
+
+# Temp files
+*.tmp
+*.temp
