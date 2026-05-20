@@ -55,7 +55,7 @@ SNA 是一个受神经科学启发的计算框架，基于 **Izhikevich 脉冲�
 ## 项目结构
 
 ```
-SNA/
+Simulated-neuron-architecture/
 ├── cpp/                          # C++ 核心引擎 (pybind11 绑定)
 │   ├── cortical_brain.h/cpp      # 皮层脑主控类 (10 脑区)
 │   ├── neuron_izhikevich.cpp     # Izhikevich 神经元模型
@@ -137,7 +137,7 @@ SNA/
 │   ├── test_phi_validator.py     # Phi 校验测试
 │   └── test_ablation.py          # 摘除实验框架
 │
-├── experiment_results/           # 实验输出 (gitignore)
+├── experiment_results/           # 实验结果报告（可选删除，仅供参考）
 ├── config.default.yaml           # 默认配置
 ├── run_experiment.py             # 统一实验入口
 ├── run_cortical_brain.py         # 皮层脑训练脚本
@@ -170,8 +170,8 @@ SNA/
 ### 1. 克隆仓库
 
 ```bash
-git clone https://github.com/XL1126/SNA.git
-cd SNA
+git clone https://github.com/XL1126/Simulated-neuron-architecture.git
+cd Simulated-neuron-architecture
 ```
 
 ### 2. 安装 Python 依赖
@@ -366,6 +366,17 @@ study.add_ablation("hippocampus", disable_hippocampus)
 results = study.run_all(n_steps=200)
 study.print_report(results)
 ```
+
+---
+
+## 实验结果说明
+
+`experiment_results/` 目录包含完整的 5 级实验编排器运行报告，包括：
+- **T1-T5** 分级实验数据：神经元规模 8K/16K/24K/32K、不同 episode 数、不同世界配置
+- 指标：Phi（IIT）、Global Ignition（GWT）、意识水平、成功率、步/秒性能、校正后指标等
+- `orchestrator_checkpoint.json`：批量编排器断点续传记录
+
+这些结果是可复现的（重新运行实验即可生成），**你可以安全删除该目录以节省空间**。
 
 ---
 

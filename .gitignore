@@ -22,8 +22,7 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
-# Experiment outputs (large)
-experiment_results/
+
 
 # Python virtualenv
 venv/
