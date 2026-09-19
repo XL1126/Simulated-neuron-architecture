@@ -1,4 +1,4 @@
-# SNA — Simulated Neuron Architecture
+﻿# SNA — Simulated Neuron Architecture
 
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
 [![C++](https://img.shields.io/badge/C%2B%2B-17-blueviolet)](https://isocpp.org/)
@@ -419,3 +419,15 @@ MIT License — 详见 [LICENSE](./LICENSE) 文件。
 ## 致谢
 
 本项目参考了 Nengo、Spaun (Eliasmith et al.) 的 SPA 架构设计，以及 IIT、GWT 等意识理论的计算实现思路。感谢开源社区中 pybind11、NumPy 等项目的支持。
+
+---
+
+## 仓库分支说明
+
+| 分支 | 用途 |
+|------|------|
+| main | 主线代码：C++/Python 引擎、认知 v2、训练脚本、前端、实验结果 |
+| docs | 设计文档：完整实现规范、前置可行性审查、压测报告等 |
+| legacy-v1 | 旧版 V1.0 源码快照（仅参考，不再维护） |
+
+本地大体积历史包（SNA后端.zip、历代项目 zip）不入库，请自行离线保存。
