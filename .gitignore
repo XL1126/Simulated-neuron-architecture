@@ -1,43 +1,13 @@
-# Build artifacts
-build/
-dist/
-*.egg-info/
+﻿build/
 __pycache__/
 *.pyc
 *.pyo
-
-# C++ compiled binaries
 *.pyd
 *.so
 *.dll
 *.exe
-
-# IDE
+*.zip
 .vscode/
 .idea/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Python virtualenv
 venv/
 .venv/
-env/
-
-# pytest
-.pytest_cache/
-
-# Temp files
-*.tmp
-*.temp
-*.log
-
-# Large archives / local-only dumps
-*.zip
-*.7z
-*.rar
-*.tar
-*.tar.gz

@@ -135,11 +135,6 @@ PYBIND11_MODULE(core_cpp, m) {
         .def("read_output_text", &CorticalBrain::read_output_text)
         .def("read_consciousness", &CorticalBrain::read_consciousness)
         .def("sleep_cycle", &CorticalBrain::sleep_cycle)
-        .def("train_concept", &CorticalBrain::train_concept,
-             py::arg("concept_idx"), py::arg("reward"))
-        .def("train_concepts_batch", &CorticalBrain::train_concepts_batch,
-             py::arg("concept_indices"), py::arg("reward"))
-        .def("get_concept_scores", &CorticalBrain::get_concept_scores)
         .def("reset_workspace", &CorticalBrain::reset_workspace)
         .def("total_neurons", &CorticalBrain::total_neurons)
         .def("get_regions", &CorticalBrain::get_regions)

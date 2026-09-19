@@ -5,11 +5,11 @@
 #include <cmath>
 
 struct STDPConfig {
-    float a_plus = 0.08f;      // 10x larger for real learning
-    float a_minus = 0.06f;     // 10x larger
+    float a_plus = 0.008f;
+    float a_minus = 0.006f;
     float tau_plus_ms = 20.0f;
     float tau_minus_ms = 20.0f;
-    float dopamine_k = 2.0f;   // stronger dopamine modulation
+    float dopamine_k = 1.0f;
     float history_window_ms = 80.0f;
 };
 
@@ -29,7 +29,7 @@ inline void stdp_update_synapse(Synapse& syn, uint64_t t_pre, uint64_t t_post,
     float da_factor = 1.0f + cfg.dopamine_k * (dopamine - 0.5f);
     da_factor = std::max(0.0f, std::min(2.0f, da_factor));
 
-    float delta = stdp_val * da_factor * 0.5f;  // 5x stronger than original 0.1f
+    float delta = stdp_val * da_factor * 0.1f;
     syn.weight += delta;
     if (!std::isfinite(syn.weight)) syn.weight = 0.01f;
     if (syn.weight > 0.5f) syn.weight = 0.5f;
@@ -39,7 +39,7 @@ inline void stdp_update_synapse(Synapse& syn, uint64_t t_pre, uint64_t t_post,
 inline void stdp_update_eligibility(Synapse& syn, uint64_t t_pre, uint64_t t_post, float lambda) {
     float dt = std::abs((float)((int64_t)t_post - (int64_t)t_pre));
     float trace_update = std::exp(-dt / 30.0f);
-    syn.eligibility_trace = lambda * syn.eligibility_trace + trace_update * 0.5f;  // 5x stronger
+    syn.eligibility_trace = lambda * syn.eligibility_trace + trace_update * 0.1f;
     if (!std::isfinite(syn.eligibility_trace)) syn.eligibility_trace = 0.0f;
 }
 
@@ -54,7 +54,7 @@ inline void stdp_apply_credit(Synapse& syn, float reward, float eta) {
 
 class STDPEngine {
 public:
-    static constexpr float DEFAULT_LR = 0.01f;  // 10x larger
+    static constexpr float DEFAULT_LR = 0.001f;
     static constexpr float A2_PLUS = 0.008f;
     static constexpr float A3_PLUS = 0.006f;
     static constexpr float A3_MINUS = 0.007f;

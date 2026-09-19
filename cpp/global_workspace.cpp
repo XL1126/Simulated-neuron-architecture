@@ -13,7 +13,7 @@ GlobalWorkspacePopulation::GlobalWorkspacePopulation(
       global_activity(0.0f), prev_activity(0.0f),
       ignition_strength(0.0f), competition_entropy(0.0f),
       winner_margin(0.0f), winner_fatigue(0.0f),
-      adaptive_inhibition_scale(0.15f),
+      adaptive_inhibition_scale(0.35f),
       ignition_saturation_risk(0.0f),
       unique_winners_count(0)
 {
@@ -51,7 +51,7 @@ float GlobalWorkspacePopulation::_compute_activity_entropy() {
 void GlobalWorkspacePopulation::_update_izhikevich(float dopamine) {
     for (uint32_t i = 0; i < num_neurons; i++) {
         float I_total = excitation[i] - inhibition[i]
-            + std::normal_distribution<float>(0.0f, 0.5f)(rng) + 2.0f;
+            + std::normal_distribution<float>(0.0f, 0.5f)(rng);
         excitation[i] *= 0.85f;
 
         float v = membrane[i];
@@ -61,14 +61,14 @@ void GlobalWorkspacePopulation::_update_izhikevich(float dopamine) {
         membrane[i] += dv * 0.5f;
         recovery[i] += du * 0.5f;
 
-        if (membrane[i] >= 15.0f) {
+        if (membrane[i] >= 30.0f) {
             membrane[i] = -65.0f;
             recovery[i] += 2.0f;
             activity[i] = std::min(1.0f, activity[i] + 0.2f);
         }
 
         activity[i] *= 0.92f;
-        inhibition[i] *= 0.75f;
+        inhibition[i] *= 0.85f;
         membrane[i] += dopamine * 0.3f;
     }
 }
@@ -82,7 +82,7 @@ void GlobalWorkspacePopulation::_apply_lateral_inhibition() {
 
     for (uint32_t i = 0; i < num_neurons; i++) {
         float inhibition_strength = (total - activity[i]) * adaptive_inhibition_scale;
-        inhibition[i] += inhibition_strength * 1.0f;
+        inhibition[i] += inhibition_strength * 2.0f;
     }
 
     float entropy = _compute_activity_entropy();
@@ -93,7 +93,7 @@ void GlobalWorkspacePopulation::_apply_lateral_inhibition() {
     } else if (entropy < 0.25f) {
         adaptive_inhibition_scale = std::max(0.15f, adaptive_inhibition_scale - 0.008f);
     } else {
-        adaptive_inhibition_scale = adaptive_inhibition_scale * 0.995f + 0.12f * 0.005f;
+        adaptive_inhibition_scale = adaptive_inhibition_scale * 0.995f + 0.30f * 0.005f;
     }
 
     float stable_wins = 0.0f;
@@ -348,7 +348,7 @@ void GlobalWorkspacePopulation::reset() {
     competition_entropy = 0.0f;
     winner_margin = 0.0f;
     winner_fatigue = 0.0f;
-    adaptive_inhibition_scale = 0.15f;
+    adaptive_inhibition_scale = 0.35f;
     ignition_saturation_risk = 0.0f;
     unique_winners_count = 0;
 
