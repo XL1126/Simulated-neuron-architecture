@@ -1,19 +1,19 @@
-﻿# SNA 文档分支
+﻿# SNA legacy-v1 分支
 
-本分支集中存放设计与研究文档，代码主线见 [main](https://github.com/XL1126/Simulated-neuron-architecture/tree/main)。
+本分支保存 **SNA 旧版 V1.0** 源码快照，仅供对照与考古，**不再维护**。
 
-## 文档列表
+主线代码请看 [main](https://github.com/XL1126/Simulated-neuron-architecture/tree/main)。
 
-| 文件 | 说明 |
-|------|------|
-| [提示词.md](./docs/提示词.md) | SNA 完整实现规范（主规范） |
-| [前置审查.md](./docs/前置审查.md) | 可行性分析与改进建议 |
-| [SNA压测v2对比报告.md](./docs/SNA压测v2对比报告.md) | Windows / Linux 性能对比 |
-| [果蝇部署要求参考.md](./docs/果蝇部署要求参考.md) | 部署规模参考 |
-| [远程计算机硬件检测报告.md](./docs/远程计算机硬件检测报告.md) | 远程环境硬件信息 |
-| README（未处理）*.md | 早期 README 草稿 |
+## 本地路径来源
 
-## 相关分支
+`D:\SNA\SNA（旧版V1.0）`
 
-- main — 主线源码
-- legacy-v1 — 旧版 V1.0 快照
+## 内容
+
+- 1/cpp/ — V1 时期 C++ 核心
+- 1/python/ — V1 时期 Python 层
+- 1/experiments/ — V1 实验框架
+- 1/tests/ — V1 测试
+- 根目录脚本与 README.md / LICENSE / setup.py
+
+编译产物（.pyd / .so）已按 gitignore 排除，需要时可从 CMake 重新构建。
