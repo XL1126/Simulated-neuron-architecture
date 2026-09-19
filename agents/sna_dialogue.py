@@ -1,4 +1,7 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
+import os as _os, sys as _sys
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+import _path  # noqa: F401  — repo root / python path
 """
 SNA Dialogue System — 让 SNA 能说话、能对话、能学习
 

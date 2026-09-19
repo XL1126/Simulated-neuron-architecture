@@ -1,4 +1,7 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
+import os as _os, sys as _sys
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+import _path  # noqa: F401  — repo root / python path
 """
 SNA 意识树生长监控器 — 第三阶段
 

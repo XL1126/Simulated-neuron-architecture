@@ -30,12 +30,10 @@ env/
 # pytest
 .pytest_cache/
 
-# Temp files
+# Temp / dumps
 *.tmp
 *.temp
 *.log
-
-# Large archives / local-only dumps
 *.zip
 *.7z
 *.rar
