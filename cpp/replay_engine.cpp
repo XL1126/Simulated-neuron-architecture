@@ -1,6 +1,7 @@
 #include "replay_engine.h"
 #include <algorithm>
 #include <cstdlib>
+#include <ctime>
 #include <random>
 
 static inline bool is_bad(float x) { return !std::isfinite(x); }

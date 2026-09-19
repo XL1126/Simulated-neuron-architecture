@@ -79,6 +79,18 @@ CorticalBrain::CorticalBrain(uint32_t total_neurons,
     dmn_idx          = region_index["dmn"];
 
     concept_activity.resize(concepts.size(), 0.01f);
+    concept_learning_rate = 0.1f;
+    // Initialize learnable concept weights [n_concepts x lang_neurons]
+    concept_weights.resize(concepts.size() * lang_n, 0.0f);
+    // DENSE concept-specific initialization — each concept gets unique random weights
+    for (size_t ci = 0; ci < concepts.size(); ci++) {
+        uint32_t seed = (uint32_t)(ci * 2654435761);
+        for (uint32_t ni = 0; ni < lang_n && ni < 256; ni++) {
+            // Each concept-ni pair gets a unique hash-based value
+            uint32_t h = (seed ^ (ni * 2246822519)) % 10000;
+            concept_weights[ci * lang_n + ni] = ((float)h / 10000.0f - 0.5f) * 0.2f;
+        }
+    }
     self_state.resize(128, 0.01f);
     predicted_state.resize(128, 0.01f);
     self_prediction_weights.resize(128 * 128, 0.0f);
@@ -377,7 +389,7 @@ void CorticalBrain::step(float world_reward) {
     effective_dopamine = std::max(0.0f, std::min(1.0f, effective_dopamine));
 
     for (size_t i = 0; i < populations.size(); i++) {
-        float region_noise = 0.025f + 0.005f * (float)(step_counter % 7) + adaptive_noise_boost;
+        float region_noise = 0.05f + 0.01f * (float)(step_counter % 7) + adaptive_noise_boost;
         if (i == workspace_idx)
             region_noise += global_norepinephrine * 0.015f;
         if (i == hippocampal_idx)
@@ -536,11 +548,11 @@ void CorticalBrain::step(float world_reward) {
 
     for (size_t ci = 0; ci < concept_activity.size(); ci++) {
         if (ci < grounded.size()) {
-            concept_activity[ci] = concept_activity[ci] * 0.35f + grounded[ci] * 0.65f;
+            concept_activity[ci] = concept_activity[ci] * 0.90f + grounded[ci] * 0.10f;
         }
         if (ci < dmn_modulation.size()) {
             concept_activity[ci] = std::min(1.0f,
-                concept_activity[ci] + dmn_modulation[ci] * 0.20f);
+                concept_activity[ci] + dmn_modulation[ci] * 0.05f);
         }
     }
 
@@ -553,7 +565,7 @@ void CorticalBrain::step(float world_reward) {
         size_t hash_ci = ci * 7 + step_counter;
         dmn_val += (float)((hash_ci * 1103515245) % 10000) / 10000.0f * 0.02f;
         concept_activity[ci] = std::min(1.0f, std::max(0.0f,
-            concept_activity[ci] + dmn_val * spontaneous_thinker.spontaneity * 0.60f));
+            concept_activity[ci] + dmn_val * spontaneous_thinker.spontaneity * 0.10f));
     }
 
     if (step_counter % 250 == 249 && spontaneous_thinker.spontaneity > 0.7f) {
@@ -652,7 +664,7 @@ void CorticalBrain::step(float world_reward) {
     auto goal_dir = goal_generator.get_goal_direction();
     for (size_t ci = 0; ci < concept_activity.size() && ci < goal_dir.size(); ci++) {
         concept_activity[ci] = std::min(1.0f, std::max(0.0f,
-            concept_activity[ci] + goal_dir[ci] * 0.05f));
+            concept_activity[ci] + goal_dir[ci] * 0.01f));
     }
 
     float temporal_contrast = 0.0f;
@@ -706,7 +718,7 @@ void CorticalBrain::step(float world_reward) {
     auto planned_action = active_inference.get_planned_action();
     for (size_t ci = 0; ci < concept_activity.size() && ci < planned_action.size(); ci++) {
         concept_activity[ci] = std::min(1.0f, std::max(0.0f,
-            concept_activity[ci] + planned_action[ci] * 0.04f));
+            concept_activity[ci] + planned_action[ci] * 0.01f));
     }
 
     std::vector<float> social_obs(16, 0.0f);
@@ -745,7 +757,7 @@ void CorticalBrain::step(float world_reward) {
         concept_activity, (int)concept_activity.size());
     for (size_t ci = 0; ci < concept_activity.size() && ci < creative_mod.size(); ci++) {
         concept_activity[ci] = std::min(1.0f, std::max(0.0f,
-            concept_activity[ci] + creative_mod[ci] * 0.15f));
+            concept_activity[ci] + creative_mod[ci] * 0.03f));
     }
 
     auto novel_combo = creative_generator.get_novel_concept_combination(
@@ -758,6 +770,16 @@ void CorticalBrain::step(float world_reward) {
 
     _store_episodic_memory();
     _update_consciousness();
+
+    // === SELECTIVE CREDIT ASSIGNMENT ===
+    // Only train language + workspace + prefrontal (learning regions)
+    // Freeze: visual, motor, hippocampus, thalamus, amygdala, claustrum, DMN (stability regions)
+    float credit_reward = previous_reward + intrinsic_reward_state * 0.3f;
+    float credit_eta = 0.01f * (1.0f + global_dopamine);
+
+    populations[language_idx].apply_credit(credit_reward, credit_eta);
+    populations[workspace_idx].apply_credit(credit_reward, credit_eta * 0.5f);
+    populations[prefrontal_idx].apply_credit(credit_reward, credit_eta * 0.3f);
 
     _process_brain_state();
     _step_swr_replay();
@@ -873,54 +895,79 @@ void CorticalBrain::inject_text(const std::string& text) {
     input_perturbed = true;
 
     auto& lang_pop = populations[language_idx];
-    uint32_t n_per = regions[language_idx].n_neurons /
-                     std::max((uint32_t)concept_list.size(), (uint32_t)1);
-    if (n_per < 8) n_per = 8;
+    uint32_t lang_base = regions[language_idx].base_id;
+    uint32_t lang_n = regions[language_idx].n_neurons;
 
     std::istringstream iss(text);
     std::string word;
     size_t wi = 0;
+    std::hash<std::string> hasher;
+
     while (iss >> word) {
+        uint32_t word_hash = (uint32_t)hasher(word);
+
+        // PRIME-STEP ENCODING: use hash-derived prime step to ensure
+        // non-overlapping neuron activation for different words
+        uint32_t step_size = 7 + (word_hash % 29);  // prime steps: 7-35
+        // Make step coprime with lang_n
+        while (lang_n % step_size == 0) step_size++;
+
+        uint32_t n_inject = std::min((uint32_t)30, lang_n / 10);
+        for (uint32_t k = 0; k < n_inject; k++) {
+            uint32_t nid = lang_base + (word_hash + k * step_size) % lang_n;
+            // Alternating strong/weak for richer encoding
+            float strength = (k % 3 == 0) ? 1.0f : 0.6f;
+            lang_pop.inject_spike(nid, strength, 1 + (uint32_t)(k % 3));
+        }
+
+        // Concept-matched region for grounding
         uint32_t best_ci = 0;
         size_t best_match = 0;
         for (size_t ci = 0; ci < concept_list.size(); ci++) {
+            if (concept_list[ci] == word) { best_ci = (uint32_t)ci; best_match = 100; break; }
             size_t match = 0;
-            size_t pos = 0;
-            while ((pos = concept_list[ci].find(word[0], pos)) != std::string::npos) {
-                match++; pos++;
-                if (match > best_match) {
-                    best_match = match;
-                    best_ci = (uint32_t)ci;
-                }
+            for (size_t i = 0; i < std::min(word.size(), concept_list[ci].size()); i++) {
+                if (word[i] == concept_list[ci][i]) match++;
+                else break;
             }
+            if (match > best_match) { best_match = match; best_ci = (uint32_t)ci; }
         }
-        if (best_match == 0) {
-            std::hash<std::string> hasher;
-            uint32_t h32 = (uint32_t)(hasher(word) % (uint32_t)concept_list.size());
-            best_ci = h32;
+        if (best_match == 0) best_ci = word_hash % (uint32_t)concept_list.size();
+
+        uint32_t n_per = lang_n / std::max((uint32_t)concept_list.size(), (uint32_t)1);
+        uint32_t conc_start = lang_base + best_ci * n_per;
+        for (uint32_t k = 0; k < std::min(n_per, (uint32_t)10); k++) {
+            lang_pop.inject_spike(conc_start + k, 0.8f, 2);
         }
 
-        uint32_t start = regions[language_idx].base_id + best_ci * n_per;
-        for (uint32_t k = 0; k < std::min(n_per / 2, (uint32_t)5); k++) {
-            uint32_t nid = start + k;
-            if (nid < regions[language_idx].base_id + regions[language_idx].n_neurons) {
-                lang_pop.inject_spike(nid, 0.6f + 0.1f * (float)wi, 1 + (uint32_t)(wi % 5));
-            }
-        }
         wi++;
     }
 
+    // PFC injection with text-specific hash
     auto& pfc_pop = populations[prefrontal_idx];
-    for (size_t i = 0; i < std::min(wi * 2, (size_t)12); i++) {
-        uint32_t nid = regions[prefrontal_idx].base_id + (uint32_t)i;
-        pfc_pop.inject_spike(nid, 0.3f, 2 + (uint32_t)(i % 4));
+    uint32_t text_hash = (uint32_t)hasher(text);
+    uint32_t pfc_step = 11 + (text_hash % 17);
+    for (size_t i = 0; i < std::min(wi * 4, (size_t)25); i++) {
+        uint32_t nid = regions[prefrontal_idx].base_id
+            + (text_hash + i * pfc_step) % regions[prefrontal_idx].n_neurons;
+        pfc_pop.inject_spike(nid, 0.6f, 1 + (uint32_t)(i % 3));
     }
 
+    // Thalamic injection for attention
     auto& thal_pop = populations[thalamus_idx];
-    for (size_t i = 0; i < std::min(wi, (size_t)4); i++) {
+    uint32_t thal_step = 5 + (text_hash % 13);
+    for (size_t i = 0; i < std::min(wi * 2, (size_t)10); i++) {
         uint32_t nid = regions[thalamus_idx].base_id
-            + (uint32_t)(i * 17) % regions[thalamus_idx].n_neurons;
-        thal_pop.inject_spike(nid, 0.2f, 1 + (uint32_t)(i % 3));
+            + (text_hash * 17 + i * thal_step) % regions[thalamus_idx].n_neurons;
+        thal_pop.inject_spike(nid, 0.5f, 1);
+    }
+
+    // Workspace injection for global broadcast
+    auto& ws_pop = populations[workspace_idx];
+    for (size_t i = 0; i < std::min(wi, (size_t)6); i++) {
+        uint32_t nid = regions[workspace_idx].base_id
+            + (text_hash * 31 + i * 13) % regions[workspace_idx].n_neurons;
+        ws_pop.inject_spike(nid, 0.4f, 2);
     }
 }
 
@@ -949,7 +996,9 @@ std::vector<uint32_t> CorticalBrain::read_motor_output() const {
 }
 
 std::vector<float> CorticalBrain::read_thought_vector() const {
-    std::vector<float> thought(256, 0.0f);
+    // Use 512-dim vector with hash-based (not modulo) mapping
+    // to avoid signal cancellation from neuron_id collision
+    std::vector<float> thought(512, 0.0f);
     std::vector<size_t> source_regions = {
         visual_idx, hippocampal_idx, prefrontal_idx, language_idx,
         workspace_idx, thalamus_idx, claustrum_idx, dmn_idx
@@ -957,7 +1006,9 @@ std::vector<float> CorticalBrain::read_thought_vector() const {
     for (size_t ri : source_regions) {
         auto& fires = populations[ri].get_current_fires();
         for (auto& f : fires) {
-            uint32_t idx = f.neuron_id % 256;
+            // Use hash instead of modulo for better distribution
+            uint32_t h = (uint32_t)(f.neuron_id * 2654435761u);
+            uint32_t idx = h % 512;
             thought[idx] += f.strength * 0.08f;
         }
     }
@@ -1251,50 +1302,124 @@ void CorticalBrain::_apply_amygdala_modulation() {
 void CorticalBrain::_update_concept_activities() {
     auto& lang_pop = populations[language_idx];
     auto& fires = lang_pop.get_current_fires();
+    uint32_t lang_n = regions[language_idx].n_neurons;
 
-    for (auto& ca : concept_activity) ca *= 0.75f;
+    // Decay — strong decay to prevent saturation
+    for (auto& ca : concept_activity) ca *= 0.50f;  // was 0.75f
 
-    uint32_t per_conc = regions[language_idx].n_neurons /
-                        std::max((uint32_t)concept_list.size(), (uint32_t)1);
-    if (per_conc == 0) per_conc = 8;
-
+    // Language region: use learnable concept_weights
+    std::vector<float> lang_act(lang_n, 0.0f);
     for (auto& f : fires) {
         uint32_t local_id = f.neuron_id - regions[language_idx].base_id;
-        uint32_t ci = local_id / per_conc;
-        if (ci < concept_activity.size())
-            concept_activity[ci] = std::min(1.0f,
-                concept_activity[ci] + f.strength * 0.08f);
+        if (local_id < lang_n)
+            lang_act[local_id] += f.strength;
+    }
+    
+    // Cache lang_act for get_concept_scores (accumulate, don't overwrite)
+    if (cached_lang_act.size() != lang_act.size()) {
+        cached_lang_act = lang_act;
+    } else {
+        for (size_t i = 0; i < lang_act.size(); i++) {
+            cached_lang_act[i] = std::max(cached_lang_act[i], lang_act[i]);
+        }
+    }
+    // Decay cached activity slowly
+    for (auto& v : cached_lang_act) v *= 0.95f;
+
+    for (size_t ci = 0; ci < concept_activity.size(); ci++) {
+        float weighted_sum = 0.0f;
+        for (uint32_t ni = 0; ni < lang_n && ni < 256; ni++) {
+            weighted_sum += lang_act[ni] * concept_weights[ci * lang_n + ni];
+        }
+        concept_activity[ci] += weighted_sum * 0.90f;  // concept_weights is THE driver
     }
 
+    // PFC contribution (fixed, keeps some structure)
     auto& pfc_fires = populations[prefrontal_idx].get_current_fires();
     for (auto& f : pfc_fires) {
         uint32_t ci = f.neuron_id % (uint32_t)concept_list.size();
         if (ci < concept_activity.size())
             concept_activity[ci] = std::min(1.0f,
-                concept_activity[ci] + f.strength * 0.08f);
+                concept_activity[ci] + f.strength * 0.04f);
     }
 
+    // DMN contribution
     auto& dmn_fires = populations[dmn_idx].get_current_fires();
-    float dmn_fire_total = 0.0f;
     for (auto& f : dmn_fires) {
         uint32_t ci = f.neuron_id % (uint32_t)concept_list.size();
-        dmn_fire_total += f.strength;
         if (ci < concept_activity.size())
             concept_activity[ci] = std::min(1.0f,
-                concept_activity[ci] + f.strength * 0.20f);
-    }
-
-    if (dmn_fire_total > 0.5f) {
-        for (size_t ci = 0; ci < concept_activity.size(); ci++) {
-            float noise = (float)((ci * 1103515245 + step_counter * 25214903917ULL) % 10000) / 10000.0f;
-            float jitter = (noise - 0.5f) * 0.08f;
-            concept_activity[ci] += jitter;
-        }
+                concept_activity[ci] + f.strength * 0.10f);
     }
 
     for (size_t ci = 0; ci < concept_activity.size(); ci++) {
         concept_activity[ci] = std::min(1.0f, std::max(0.0f, concept_activity[ci]));
     }
+}
+
+void CorticalBrain::train_concept(int concept_idx, float reward) {
+    if (concept_idx < 0 || concept_idx >= (int)concept_activity.size()) return;
+
+    auto& lang_pop = populations[language_idx];
+    auto& fires = lang_pop.get_current_fires();
+    uint32_t lang_n = regions[language_idx].n_neurons;
+
+    // Current lang activity
+    std::vector<float> lang_act(lang_n, 0.0f);
+    for (auto& f : fires) {
+        uint32_t local_id = f.neuron_id - regions[language_idx].base_id;
+        if (local_id < lang_n)
+            lang_act[local_id] = std::min(1.0f, lang_act[local_id] + f.strength * 0.1f);
+    }
+
+    // Hebbian + reward modulation with STRONG lateral inhibition
+    float lr = concept_learning_rate * std::abs(reward);
+    float penalty = lr * 0.8f;  // 80% penalty (was 10%) — creates real competition
+    
+    for (uint32_t ni = 0; ni < lang_n && ni < 256; ni++) {
+        float delta = lr * lang_act[ni];
+        if (reward > 0) {
+            // Strengthen connection for target concept
+            concept_weights[concept_idx * lang_n + ni] += delta;
+            // Weaken ALL competing concepts (strong lateral inhibition)
+            for (size_t ci = 0; ci < concept_activity.size(); ci++) {
+                if ((int)ci != concept_idx) {
+                    concept_weights[ci * lang_n + ni] -= penalty * lang_act[ni];
+                }
+            }
+        } else {
+            // Weaken connection for target concept
+            concept_weights[concept_idx * lang_n + ni] -= delta;
+        }
+    }
+
+    // Clip ALL weights (not just target) to prevent runaway
+    for (size_t i = 0; i < concept_weights.size(); i++) {
+        concept_weights[i] = std::max(-1.0f, std::min(1.0f, concept_weights[i]));
+    }
+    
+    // Normalize: keep sum of absolute weights per concept bounded
+    for (size_t ci = 0; ci < concept_activity.size(); ci++) {
+        float sum = 0.0f;
+        for (uint32_t ni = 0; ni < lang_n && ni < 256; ni++) {
+            sum += std::abs(concept_weights[ci * lang_n + ni]);
+        }
+        if (sum > 50.0f) {  // cap total weight per concept
+            float scale = 50.0f / sum;
+            for (uint32_t ni = 0; ni < lang_n && ni < 256; ni++) {
+                concept_weights[ci * lang_n + ni] *= scale;
+            }
+        }
+    }
+}
+
+void CorticalBrain::train_concepts_batch(const std::vector<int>& indices, float reward) {
+    for (int idx : indices) train_concept(idx, reward);
+}
+
+std::vector<float> CorticalBrain::get_concept_scores() const {
+    // Return concept_activity directly (it's now properly decayed and bounded)
+    return concept_activity;
 }
 
 void CorticalBrain::_collect_self_state() {

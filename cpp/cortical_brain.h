@@ -80,6 +80,11 @@ public:
     ConsciousnessState read_consciousness() const;
 
     void sleep_cycle();
+
+    // === CONCEPT LEARNING ===
+    void train_concept(int concept_idx, float reward);
+    void train_concepts_batch(const std::vector<int>& concept_indices, float reward);
+    std::vector<float> get_concept_scores() const;
     void reset_workspace();
     size_t total_neurons() const { return n_total; }
 
@@ -181,6 +186,9 @@ private:
     InnateCircuitBuilder circuit_builder;
     std::vector<std::string> concept_list;
     std::vector<float> concept_activity;
+    std::vector<float> concept_weights;  // [n_concepts x lang_neurons] learnable concept mapping
+    std::vector<float> cached_lang_act;  // cached language activity for get_concept_scores
+    float concept_learning_rate;
     std::vector<float> drive_activations;
     uint64_t step_counter;
 

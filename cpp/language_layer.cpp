@@ -134,13 +134,13 @@ std::string LanguageLayer::generate_output(
     std::vector<float> query_embedding = project_neural_activity(lang_activity);
 
     float novelty_bonus = norepinephrine * 0.2f + curiosity * 0.15f;
-    std::uniform_real_distribution<float> noise_dist(-0.5f, 0.5f);
 
+    std::normal_distribution<float> noise_dist(0.0f, 1.0f);
     for (size_t d = 0; d < embed_dim; d++) {
         query_embedding[d] += state.context_embedding[d] * 0.35f
                              + state.stack_embedding[d] * 0.1f;
-        float step_noise = (float)((d * 1103515245 + step * 25214903917ULL) % 10000) / 10000.0f;
-        query_embedding[d] += (step_noise - 0.5f) * (norepinephrine * 0.15f + curiosity * 0.10f + 0.03f);
+        float real_noise = noise_dist(rng);
+        query_embedding[d] += real_noise * (norepinephrine * 0.15f + curiosity * 0.10f + 0.03f) * 0.3f;
     }
 
     float norm = 0.0f;

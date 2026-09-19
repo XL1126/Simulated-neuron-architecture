@@ -22,8 +22,6 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
-
-
 # Python virtualenv
 venv/
 .venv/
@@ -35,3 +33,11 @@ env/
 # Temp files
 *.tmp
 *.temp
+*.log
+
+# Large archives / local-only dumps
+*.zip
+*.7z
+*.rar
+*.tar
+*.tar.gz
