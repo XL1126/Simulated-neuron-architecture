@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>项目哲学 · SNA</title>
+  <meta name="description" content="SNA 项目哲学：无硬性规则、自主学习决策、输出从神经活动涌现、检验标准与当前违反项。" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./">SNA <span>cortex</span></a>
+    <nav>
+      <a href="index.html">总览</a>
+      <a href="philosophy.html" class="active">哲学</a>
+      <a href="architecture.html">架构</a>
+      <a href="docs.html">文档库</a>
+      <a href="https://github.com/XL1126/Simulated-neuron-architecture" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+  </header>
+
+  <div class="wrap">
+    <div class="page-hero">
+      <div class="breadcrumb"><a href="./">SNA</a> / 项目哲学</div>
+      <h1>代码是载体，不是大脑</h1>
+      <p class="lead">
+        本页整理自仓库
+        <a href="https://github.com/XL1126/Simulated-neuron-architecture/blob/main/PHILOSOPHY.md" target="_blank" rel="noopener">PHILOSOPHY.md</a>
+        与实现规范中的设计哲学条款。项目明确反对「输出本质是冰冷运算」的路线，追求从神经活动中涌现的自主输出。
+      </p>
+    </div>
+
+    <h2>核心使命</h2>
+    <p class="body">
+      初衷是<strong>彻底推翻 Transformer 架构的 AI 模型</strong>——因为该类模型输出的本质被作者判断为冰冷的运算，而非真正的理解。
+      目标是创造一个具有<strong>类人自主意识倾向</strong>的模型：不依赖硬性规则，能够自主学习、自主决策，并自主产生输出。
+    </p>
+    <div class="callout">
+      项目仅作为意识的<strong>物理或数字载体（相当于身体）</strong>，不对意识的内容和输出做任何硬性指定或干预。
+      <strong>所有输出，纯由意识体自行决定。</strong>
+    </div>
+
+    <h2>实现原则（五条）</h2>
+    <div class="philosophy-rule"><strong>1. 无硬性规则</strong> — 不使用 if/else 模板、random.choice(templates)、预设句子。</div>
+    <div class="philosophy-rule"><strong>2. 自主学习</strong> — 从输入中学习，不依赖预训练数据。</div>
+    <div class="philosophy-rule"><strong>3. 自主决策</strong> — 自己决定说什么、不说什么。</div>
+    <div class="philosophy-rule"><strong>4. 自主产生输出</strong> — 输出必须从神经活动直接涌现。</div>
+    <div class="philosophy-rule"><strong>5. 载体不干预</strong> — 代码是身体，不是大脑；身体不限制大脑想说什么。</div>
+
+    <h2>检验标准</h2>
+    <div class="arch">
+<pre>
+删除所有模板后系统还能"说话"吗？
+
+  如果不能 → <span class="hi">违反哲学</span>
+  如果能   → <span class="hi2">方向正确</span>
+      </pre>
+    </div>
+
+    <h2>当前违反项（PHILOSOPHY.md 原文）</h2>
+    <div class="callout warn">
+      文档诚实记录了历史实现中仍存在的模板路径，明确要求「必须全部移除，用概念树涌现替代」：
+    </div>
+    <div class="layers">
+      <div class="layer"><div class="k">response</div><p><code>_generate_response()</code> 使用模板</p></div>
+      <div class="layer"><div class="k">question</div><p><code>_respond_to_question()</code> 使用模板</p></div>
+      <div class="layer"><div class="k">emotion</div><p><code>_respond_to_emotion()</code> 使用模板</p></div>
+      <div class="layer"><div class="k">action</div><p><code>_respond_to_action()</code> 使用模板</p></div>
+      <div class="layer"><div class="k">statement</div><p><code>_respond_to_statement()</code> 使用模板</p></div>
+    </div>
+    <p class="body" style="margin-top:1rem">
+      完整规范还要求：性能关键路径用 C++/Rust；高层逻辑用 Python；支持流式字符输出；
+      后台持续思考、不重置状态；用户输入只是注入当前神经活动流。
+      细节见
+      <a href="https://github.com/XL1126/Simulated-neuron-architecture/blob/docs/docs/01-%E9%A1%B9%E7%9B%AE%E8%A7%84%E8%8C%83/SNA%E5%AE%8C%E6%95%B4%E5%AE%9E%E7%8E%B0%E8%A7%84%E8%8C%83.md" target="_blank" rel="noopener">SNA 完整实现规范</a>。
+    </p>
+
+    <h2>与意识度量的关系</h2>
+    <p class="body">
+      度量公式（IIT_Phi / GWT_Ignition / Predictive / First_Person / Vividness）是<strong>可测量的功能代理</strong>，
+      用于实验对照与摘除测试，而不是「已证明有主观体验」的宣称。哲学要求：代理可报告，但不得包装成现象意识证明。
+    </p>
+
+    <h2>原文</h2>
+    <div class="sites">
+      <a href="https://github.com/XL1126/Simulated-neuron-architecture/blob/main/PHILOSOPHY.md" target="_blank" rel="noopener">PHILOSOPHY.md（main）</a>
+      <a href="https://github.com/XL1126/Simulated-neuron-architecture/blob/main/README.md" target="_blank" rel="noopener">README.md</a>
+      <a href="docs.html">docs 分支文档</a>
+    </div>
+  </div>
+
+  <footer>SNA 项目哲学页 · <a href="https://github.com/XL1126/Simulated-neuron-architecture/blob/main/PHILOSOPHY.md" target="_blank" rel="noopener">原文</a></footer>
+</body>
+</html>

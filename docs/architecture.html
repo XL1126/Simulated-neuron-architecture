@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>架构与规范 · SNA</title>
+  <meta name="description" content="SNA 混合架构、CorticalBrain 模块、规范要点、可行性审查摘要与测试命令。" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./">SNA <span>cortex</span></a>
+    <nav>
+      <a href="index.html">总览</a>
+      <a href="philosophy.html">哲学</a>
+      <a href="architecture.html" class="active">架构</a>
+      <a href="docs.html">文档库</a>
+      <a href="https://github.com/XL1126/Simulated-neuron-architecture" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+  </header>
+
+  <div class="wrap">
+    <div class="page-hero">
+      <div class="breadcrumb"><a href="./">SNA</a> / 架构与规范</div>
+      <h1>混合架构与实现规范要点</h1>
+      <p class="lead">
+        C++ 承载脉冲皮层热路径，Python 承载认知度量、实验编排与交互。
+        完整实现规范以 <code>docs</code> 分支为准，本页提炼关键设计与审查结论。
+      </p>
+    </div>
+
+    <h2>架构概览（README）</h2>
+    <div class="arch">
+<pre>
+┌─────────────────────────────────────────────────────────┐
+│                  <span class="hi">C++ CorticalBrain</span>                      │
+│     V1/V2 · Motor · Hippocampus · Prefrontal · Amygdala │
+│     Language · Workspace · Thalamus · Claustrum · DMN   │
+└───────────────────────────┬─────────────────────────────┘
+                            │ pybind11 (core_cpp)
+                            ▼
+┌─────────────────────────────────────────────────────────┐
+│              <span class="hi2">Python 认知层 (python/)</span>                    │
+│  统一意识度量 · Phi 校验 · SPA 语义指针 · 工作记忆 · 世界模型 │
+└───────────────────────────┬─────────────────────────────┘
+                            ▼
+┌──────────────────┬──────────────────┬───────────────────┐
+│    agents/       │    training/     │    frontend/      │
+│  认知 v2 / seed  │  实验 / 训练配方  │  聊天 UI + API    │
+└──────────────────┴──────────────────┴───────────────────┘
+      </pre>
+    </div>
+
+    <h2>规范中的宏观层级（完整实现规范）</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>层</th><th>功能</th><th>对应人脑区域</th></tr></thead>
+        <tbody>
+          <tr><td>文字感知输入层 Input</td><td>字符序列 → 时空脉冲模式，附 EOS，不做向量化</td><td>感官皮层（视觉文字区）</td></tr>
+          <tr><td>初级脉冲处理层 Primary</td><td>语义分组、局部激活、初级关联突触</td><td>初级感知皮层（Wernicke 区）</td></tr>
+          <tr><td>中枢联想思考层 Core</td><td>逻辑推理、自由联想、矛盾自检、收敛竞争</td><td>前额叶皮层 PFC</td></tr>
+          <tr><td>记忆与遗忘层 Memory</td><td>瞬时 / 短期 / 长期三层，自主遗忘与突触衰减</td><td>海马体 + 新皮层</td></tr>
+          <tr><td>输出生成层 Output</td><td>脉冲模式流式反映射为文字，不进行概率采样</td><td>运动语言皮层（Broca 区）</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>设计原则（规范摘要）</h2>
+    <div class="layers">
+      <div class="layer"><div class="k">持续活跃</div><p>启动后永不停止思考；用户输入注入持续神经活动流，不重置状态。</p></div>
+      <div class="layer"><div class="k">非干扰</div><p>禁止硬编码回复模板 / 预设句子 / 强制输出格式；输出由突触动态决定。</p></div>
+      <div class="layer"><div class="k">脉冲离散</div><p>信息编码为离散脉冲；阈值触发发放；局部连接，禁止全局全连接。</p></div>
+      <div class="layer"><div class="k">可塑性</div><p>突触权重按脉冲时序与频率在线修改（STDP 路线），不使用梯度下降描述学习过程。</p></div>
+      <div class="layer"><div class="k">流式输出</div><p>输出层支持字符流式解码，模拟一边思考一边说话。</p></div>
+      <div class="layer"><div class="k">多语言</div><p>C++/Rust 热路径 + Python 认知与 I/O；pybind11 / maturin 绑定；可选 GPU。</p></div>
+    </div>
+
+    <h2>规范性能目标（1 万神经元标准配置）</h2>
+    <div class="metrics">
+      <div class="metric"><div class="label">实时因子</div><div class="value">≤ 0.5</div><div class="note">i7-12700 / 32GB，事件驱动</div></div>
+      <div class="metric"><div class="label">脉冲吞吐</div><div class="value">≥ 10⁶ /s</div><div class="note">平均事件速率目标</div></div>
+      <div class="metric"><div class="label">内存占用</div><div class="value">≤ 2GB</div><div class="note">不含可视化仪表盘</div></div>
+      <div class="metric"><div class="label">标准规模</div><div class="value">1e4 neurons</div><div class="note">突触平均度约 200</div></div>
+    </div>
+
+    <h2>前置可行性审查要点</h2>
+    <div class="callout warn">
+      审查文档（非强制但建议阅读）指出：主规范在理论与设计上出色，但工程落地存在多个「卡脖子」风险；
+      若不调整直接开发，可能在 3–6 个月内因无法收敛而停滞。评分示例：创新性 9，短期可行性 4，长期 7。
+    </div>
+    <div class="grid">
+      <div class="card">
+        <div class="tag">风险 · 高</div>
+        <h3>STDP 能否支撑语言</h3>
+        <p>纯 STDP 从零学会自然语言证据不足。建议允许输出解码器使用受约束的代理梯度，并声明为工程妥协。</p>
+      </div>
+      <div class="card">
+        <div class="tag">风险 · 高</div>
+        <h3>规模是否够</h3>
+        <p>1 万神经元可能仅支持浅层关联。建议提升到 5–10 万，或重新定义行为基准为「微弱但可测量的学习」。</p>
+      </div>
+      <div class="card">
+        <div class="tag">风险 · 中</div>
+        <h3>内在动机公式</h3>
+        <p>需把预测误差转化为可计算奖励，避免「总是预测静止」的捷径；文档建议 curiosity / novelty 量化。</p>
+      </div>
+      <div class="card">
+        <div class="tag">风险 · 中</div>
+        <h3>非干扰 vs 任务能力</h3>
+        <p>禁止规则与必须完成具身任务可能冲突。建议 debug 宏隔离临时规则，用学习曲线抵制偷加模板。</p>
+      </div>
+    </div>
+    <p class="body" style="margin-top:1rem">
+      全文见
+      <a href="https://github.com/XL1126/Simulated-neuron-architecture/blob/docs/docs/02-%E5%8F%AF%E8%A1%8C%E6%80%A7%E5%AE%A1%E6%9F%A5/%E5%89%8D%E7%BD%AE%E5%8F%AF%E8%A1%8C%E6%80%A7%E5%AE%A1%E6%9F%A5.md" target="_blank" rel="noopener">前置可行性审查.md</a>。
+    </p>
+
+    <h2>测试命令</h2>
+    <div class="arch">
+<pre>
+python -m pytest tests/test_unified_consciousness.py -v
+python -m pytest tests/test_phi_validator.py -v
+python -m pytest tests/test_ablation.py -v
+      </pre>
+    </div>
+
+    <h2>原文链接</h2>
+    <div class="sites">
+      <a href="https://github.com/XL1126/Simulated-neuron-architecture/blob/main/README.md" target="_blank" rel="noopener">README.md</a>
+      <a href="https://github.com/XL1126/Simulated-neuron-architecture/tree/docs" target="_blank" rel="noopener">docs 分支</a>
+      <a href="docs.html">本站文档索引</a>
+    </div>
+  </div>
+
+  <footer>SNA 架构页 · <a href="https://github.com/XL1126/Simulated-neuron-architecture" target="_blank" rel="noopener">GitHub</a></footer>
+</body>
+</html>
