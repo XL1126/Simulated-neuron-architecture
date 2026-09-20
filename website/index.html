@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SNA — Simulated Neuron Architecture</title>
+  <meta name="description" content="SNA 模拟神经元架构：仿生脉冲神经网络 / 自主意识皮层计算模型。C++ 脉冲皮层 + Python 认知层。" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./">SNA <span>cortex</span></a>
+    <nav>
+      <a href="#about">简介</a>
+      <a href="#branches">分支</a>
+      <a href="#stack">技术栈</a>
+      <a href="#arch">架构</a>
+      <a href="#metrics">度量</a>
+      <a href="https://github.com/XL1126/Simulated-neuron-architecture" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="eyebrow">Simulated Neuron Architecture · MIT</div>
+    <h1>SNA — <em>模拟神经元架构</em></h1>
+    <p class="lead">
+      仿生脉冲神经网络与自主意识皮层计算模型。
+      基于 Izhikevich 神经元、预测编码、全局工作空间（GWT）与信息整合理论（IIT），
+      在 <strong style="color:var(--ink)">C++ / Python</strong> 混合架构上模拟意识相关功能皮层脑网络。
+    </p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="https://github.com/XL1126/Simulated-neuron-architecture" target="_blank" rel="noopener">查看源码</a>
+      <a class="btn btn-ghost" href="https://github.com/XL1126/NOUS" target="_blank" rel="noopener">同作者 NOUS 项目</a>
+    </div>
+  </section>
+
+  <main class="section">
+    <div class="callout">
+      <strong style="color:var(--ink)">立场：</strong>
+      不接外部 Transformer 大模型；不把「有意识」当营销口号——提供可测量的功能代理与实验框架。
+      代码是载体，输出应从神经活动中涌现。
+    </div>
+
+    <h2 id="about">项目定位</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>脉冲皮层</h3>
+        <p>C++ CorticalBrain 承载 V1/V2、运动、海马、前额叶、杏仁核、丘脑、屏状核、DMN 等区域模块。</p>
+      </div>
+      <div class="card">
+        <h3>认知层</h3>
+        <p>Python 层负责统一意识度量、Phi 校验、SPA 语义指针、工作记忆与世界模型。</p>
+      </div>
+      <div class="card">
+        <h3>实验体系</h3>
+        <p><code>training/</code> 与 <code>experiments/</code> 提供实验入口与配方；<code>tests/</code> 含单元与摘除测试。</p>
+      </div>
+      <div class="card">
+        <h3>前端交互</h3>
+        <p><code>frontend/</code> 提供聊天前端 + Flask API（端口 8088），可对接本地守护进程。</p>
+      </div>
+    </div>
+
+    <h2 id="branches">仓库分支</h2>
+    <div class="branch-row">
+      <div class="branch">
+        <code>main</code>
+        <p>主线源码：C++ 引擎、Python 认知层、agents、training、前端、运行时备份。</p>
+      </div>
+      <div class="branch">
+        <code>docs</code>
+        <p>文档专库：实现规范、可行性审查、压测报告、部署参考（无业务代码）。</p>
+      </div>
+      <div class="branch">
+        <code>legacy-v1</code>
+        <p>历史 V1.0 快照，不再维护，仅供对照。</p>
+      </div>
+    </div>
+
+    <h2 id="stack">技术栈</h2>
+    <div class="stack">
+      <div class="stack-row">
+        <div class="k">Python</div>
+        <p>≥ 3.8 · 认知层 / agents / training / 前端 API</p>
+      </div>
+      <div class="stack-row">
+        <div class="k">C++</div>
+        <p>MSVC 2019+ 或 GCC 9+ · 脉冲皮层核心引擎</p>
+      </div>
+      <div class="stack-row">
+        <div class="k">CMake</div>
+        <p>≥ 3.18 · 编译构建（Windows 可用 <code>build_and_copy.bat</code>）</p>
+      </div>
+      <div class="stack-row">
+        <div class="k">pybind11</div>
+        <p>C++ ↔ Python 绑定（<code>core_cpp</code>），绑定检查：<code>check_binding.py</code></p>
+      </div>
+      <div class="stack-row">
+        <div class="k">生态</div>
+        <p>numpy · pyyaml · flask · pytest · 可选 psutil</p>
+      </div>
+      <div class="stack-row">
+        <div class="k">License</div>
+        <p>MIT — 详见仓库 LICENSE</p>
+      </div>
+    </div>
+
+    <h2 id="arch">架构概览</h2>
+    <div class="arch">
+      <pre>
+┌─────────────────────────────────────────────────────────┐
+│                  <span class="hi">C++ CorticalBrain</span>                      │
+│     V1/V2 · Motor · Hippocampus · Prefrontal · Amygdala │
+│     Language · Workspace · Thalamus · Claustrum · DMN   │
+└───────────────────────────┬─────────────────────────────┘
+                            │ pybind11 (core_cpp)
+                            ▼
+┌─────────────────────────────────────────────────────────┐
+│              <span class="hi2">Python 认知层 (python/)</span>                    │
+│  统一意识度量 · Phi 校验 · SPA 语义指针 · 工作记忆 · 世界模型 │
+└───────────────────────────┬─────────────────────────────┘
+                            ▼
+┌──────────────────┬──────────────────┬───────────────────┐
+│    agents/       │    training/     │    frontend/      │
+│  认知 v2 / seed  │  实验 / 训练配方  │  聊天 UI + API    │
+└──────────────────┴──────────────────┴───────────────────┘
+      </pre>
+    </div>
+
+    <h2 id="metrics">意识度量 v6（功能代理）</h2>
+    <div class="metrics">
+      <div class="metric">
+        <div class="label">IIT_Phi</div>
+        <div class="value">0.35 × Φ</div>
+        <div class="note">信息整合相关分量</div>
+      </div>
+      <div class="metric">
+        <div class="label">GWT_Ignition</div>
+        <div class="value">0.25 × 点火</div>
+        <div class="note">全局工作空间广播强度</div>
+      </div>
+      <div class="metric">
+        <div class="label">Predictive_Accuracy</div>
+        <div class="value">0.20 × 预测</div>
+        <div class="note">预测编码准确度</div>
+      </div>
+      <div class="metric">
+        <div class="label">First_Person_Salience</div>
+        <div class="value">0.10 × 显著性</div>
+        <div class="note">第一人称相关显著性</div>
+      </div>
+      <div class="metric">
+        <div class="label">Perceptual_Vividness</div>
+        <div class="value">0.10 × 鲜明度</div>
+        <div class="note">知觉生动性代理</div>
+      </div>
+    </div>
+    <div class="callout" style="margin-top:1rem">
+      上述公式是<strong style="color:var(--ink)">工程功能代理</strong>，不是「已证明有主观体验」。
+      理论出处见 <code>docs</code> 分支与 <code>PHILOSOPHY.md</code>。
+    </div>
+
+    <h2>相关项目</h2>
+    <div class="sites">
+      <a href="https://github.com/XL1126/Simulated-neuron-architecture" target="_blank" rel="noopener">SNA 源码</a>
+      <a href="https://github.com/XL1126/NOUS" target="_blank" rel="noopener">NOUS · 独立意识体架构</a>
+      <a href="https://github.com/XL1126/xlchat-login-skeleton" target="_blank" rel="noopener">XL Chat 登录系统</a>
+    </div>
+  </main>
+
+  <footer>
+    介绍页 · 项目仓库
+    <a href="https://github.com/XL1126/Simulated-neuron-architecture" target="_blank" rel="noopener">github.com/XL1126/Simulated-neuron-architecture</a>
+  </footer>
+</body>
+</html>
