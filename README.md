@@ -14,6 +14,16 @@
 [文档 `docs`](https://github.com/XL1126/Simulated-neuron-architecture/tree/docs) ·
 [旧版 `legacy-v1`](https://github.com/XL1126/Simulated-neuron-architecture/tree/legacy-v1)
 
+**🌐 在线站点**
+
+[![介绍站](https://img.shields.io/badge/在线介绍站-Live-00B8D4?style=for-the-badge&logo=googlechrome&logoColor=white)](https://xl1126.github.io/Simulated-neuron-architecture/)
+[![哲学](https://img.shields.io/badge/项目哲学-Philosophy-00838F?style=for-the-badge)](https://xl1126.github.io/Simulated-neuron-architecture/philosophy.html)
+[![架构](https://img.shields.io/badge/架构与规范-Architecture-006064?style=for-the-badge)](https://xl1126.github.io/Simulated-neuron-architecture/architecture.html)
+[![文档库](https://img.shields.io/badge/文档库-Docs-4DD0E1?style=for-the-badge)](https://xl1126.github.io/Simulated-neuron-architecture/docs.html)
+
+> 快速跳转：[总览](https://xl1126.github.io/Simulated-neuron-architecture/) · [哲学](https://xl1126.github.io/Simulated-neuron-architecture/philosophy.html) · [架构](https://xl1126.github.io/Simulated-neuron-architecture/architecture.html) · [文档库](https://xl1126.github.io/Simulated-neuron-architecture/docs.html) · [GitHub 源码](https://github.com/XL1126/Simulated-neuron-architecture)
+
+
 </div>
 
 ---
